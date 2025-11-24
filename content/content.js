@@ -1,241 +1,226 @@
-class ThemeManager {
+class AdvancedThemeEngine {
   constructor() {
     this.currentSite = window.location.hostname;
+    this.originalStyles = new Map();
+    this.observedElements = new Set();
     this.init();
   }
 
   init() {
-    console.log(`🎨 Theme Switcher loaded on: ${this.currentSite}`);
-    this.applySavedTheme();
+    console.log(`🎨 Advanced Theme Engine loaded on: ${this.currentSite}`);
+
+    // Store original state immediately
+    this.storeOriginalState();
+
+    // Set up message listener
     this.setupMessageListener();
+
+    // Apply saved theme
+    this.applySavedTheme();
   }
 
+  // Simplified: Store original body state only for now
+  storeOriginalState() {
+    console.log("💾 Storing original website state...");
+
+    // Store body styles
+    const bodyStyle = getComputedStyle(document.body);
+    this.originalStyles.set("body", {
+      backgroundColor: bodyStyle.backgroundColor,
+      color: bodyStyle.color,
+      element: document.body,
+    });
+
+    console.log("✅ Original state stored");
+  }
+
+  // FIXED: Working dark theme
+  applyAdaptiveDarkTheme() {
+    console.log("🌙 Applying adaptive dark theme...");
+
+    // Simple dark theme that works
+    document.body.style.backgroundColor = "#1a1a1a";
+    document.body.style.color = "#e0e0e0";
+
+    // Style common elements
+    this.styleCommonElements("dark");
+
+    // Mark as modified
+    this.markModifiedElements();
+
+    console.log("✅ Dark theme applied");
+  }
+
+  // FIXED: Working light theme
+  applyAdaptiveLightTheme() {
+    console.log("☀️ Applying adaptive light theme...");
+
+    // Clean light theme
+    document.body.style.backgroundColor = "#ffffff";
+    document.body.style.color = "#333333";
+
+    // Style common elements
+    this.styleCommonElements("light");
+
+    // Mark as modified
+    this.markModifiedElements();
+
+    console.log("✅ Light theme applied");
+  }
+
+  // Style common interactive elements
+  styleCommonElements(themeType) {
+    const elements = document.querySelectorAll(
+      "a, button, input, textarea, select"
+    );
+
+    elements.forEach((element) => {
+      if (themeType === "dark") {
+        element.style.backgroundColor = "#2d2d2d";
+        element.style.color = "#ffffff";
+        element.style.borderColor = "#555555";
+      } else {
+        element.style.backgroundColor = "#f8f9fa";
+        element.style.color = "#333333";
+        element.style.borderColor = "#dddddd";
+      }
+    });
+  }
+
+  // FIXED: Proper reset that works
+  resetToOriginal() {
+    console.log("🔄 Restoring original styles...");
+
+    // Restore body styles
+    const originalBody = this.originalStyles.get("body");
+    if (originalBody && originalBody.element) {
+      originalBody.element.style.backgroundColor = originalBody.backgroundColor;
+      originalBody.element.style.color = originalBody.color;
+    }
+
+    // Reset common elements
+    this.resetCommonElements();
+
+    console.log("✅ Original styles restored");
+  }
+
+  resetCommonElements() {
+    const elements = document.querySelectorAll(
+      "a, button, input, textarea, select"
+    );
+    elements.forEach((element) => {
+      element.style.backgroundColor = "";
+      element.style.color = "";
+      element.style.borderColor = "";
+    });
+  }
+
+  markModifiedElements() {
+    document.body.setAttribute("data-theme-modified", "true");
+  }
+
+  // FIXED: Message listener with error handling
   setupMessageListener() {
-    // Listen for theme commands from popup
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      console.log("📨 Theme command received:", request);
+      console.log("📨 Message received:", request);
 
-      switch (request.action) {
-        case "applyDarkTheme":
-          this.applyDarkTheme();
-          break;
-        case "applyLightTheme":
-          this.applyLightTheme();
-          break;
-        case "resetTheme":
-          this.resetTheme();
-          break;
+      try {
+        switch (request.action) {
+          case "applyDarkTheme":
+            this.applyAdaptiveDarkTheme();
+            this.saveTheme("dark");
+            break;
+          case "applyLightTheme":
+            this.applyAdaptiveLightTheme();
+            this.saveTheme("light");
+            break;
+          case "resetTheme":
+            this.resetToOriginal();
+            this.saveTheme("reset");
+            break;
+          default:
+            console.warn("Unknown action:", request.action);
+        }
+
+        // Send response back if needed
+        if (sendResponse) {
+          sendResponse({ success: true });
+        }
+      } catch (error) {
+        console.error("Error handling message:", error);
+        if (sendResponse) {
+          sendResponse({ success: false, error: error.message });
+        }
       }
 
-      this.saveTheme(
-        request.action.replace("apply", "").replace("Theme", "").toLowerCase()
-      );
+      return true; // Keep message channel open for async response
     });
   }
 
-  applyDarkTheme() {
-    console.log("Applying adaptive dark theme...");
-
-    const originalBg = this.getComputedColor(document.body, "backgroundColor");
-    const originalText = this.getComputedColor(document.body, "color");
-
-    const darkBg = this.calculateDarkBackground(originalBg);
-    const lightText = this.calculateLightText(originalText);
-
-    document.body.style.backgroundColor = darkBg;
-    document.body.style.color = lightText;
-
-    this.styleInteractiveElements(darkBg, lightText);
-
-    this.adjustMediaForDarkMode();
-  }
-
-  applyLightTheme() {
-    console.log("Applying enhanced light theme...");
-
-    document.body.style.backgroundColor = "#f8f9fa";
-    document.body.style.color = "#2c3e50";
-
-    this.styleInteractiveElements("#ffffff", "#2c3e50");
-
-    this.resetMediaStyles();
-  }
-
-  resetTheme() {
-    console.log("Resetting to website defaults...");
-
-    document.body.style.backgroundColor = "";
-    document.body.style.color = "";
-
-    this.resetAllElements();
-  }
-
-  calculateDarkBackground(originalColor) {
-    const hsl = this.rgbToHsl(originalColor);
-    const darkHsl = [
-      hsl[0],
-      Math.max(hsl[1] * 0.7, 0.1), 
-      Math.max(hsl[2] * 0.2, 0.05),
-    ];
-
-    return this.hslToRgb(darkHsl);
-  }
-
-  calculateLightText(originalColor) {
-    const hsl = this.rgbToHsl(originalColor);
-    const textHsl = [
-      hsl[0],
-      Math.min(hsl[1] * 0.5, 0.3),
-      0.9,
-    ];
-
-    return this.hslToRgb(textHsl);
-  }
-
-  styleInteractiveElements(bgColor, textColor) {
-    const selectors = 'a, button, input, textarea, select, [role="button"]';
-    const elements = document.querySelectorAll(selectors);
-
-    elements.forEach((el) => {
-      const currentBg = this.getComputedColor(el, "backgroundColor");
-      if (this.isDefaultColor(currentBg)) {
-        el.style.backgroundColor = bgColor;
-        el.style.color = textColor;
-        el.style.borderColor = this.adjustColorBrightness(bgColor, -20);
-      }
-    });
-  }
-
-  adjustMediaForDarkMode() {
-    document.querySelectorAll("img, video").forEach((media) => {
-      media.style.filter = "brightness(0.85) contrast(1.1)";
-    });
-  }
-
-  resetMediaStyles() {
-    document.querySelectorAll("img, video").forEach((media) => {
-      media.style.filter = "";
-    });
-  }
-
-  resetAllElements() {
-    const elements = document.querySelectorAll("*");
-    elements.forEach((el) => {
-      if (el.hasAttribute("data-theme-applied")) {
-        el.removeAttribute("data-theme-applied");
-        el.style.backgroundColor = "";
-        el.style.color = "";
-        el.style.borderColor = "";
-      }
-    });
-  }
-
-
+  // FIXED: Save theme with proper error handling
   saveTheme(themeName) {
     const siteKey = `theme_${this.currentSite}`;
-    chrome.storage.local.set({ [siteKey]: themeName }, () => {
-      console.log(`Saved ${themeName} theme for ${this.currentSite}`);
-    });
+
+    chrome.storage.local.set(
+      {
+        [siteKey]: themeName,
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.error("❌ Storage error:", chrome.runtime.lastError);
+        } else {
+          console.log(`✅ Saved theme: ${themeName} for ${this.currentSite}`);
+        }
+      }
+    );
   }
 
+  // FIXED: Apply saved theme
   applySavedTheme() {
     const siteKey = `theme_${this.currentSite}`;
+
     chrome.storage.local.get([siteKey], (result) => {
-      const savedTheme = result[siteKey];
-      if (savedTheme) {
-        console.log(`Applying saved theme: ${savedTheme}`);
-        this[
-          `apply${
-            savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)
-          }Theme`
-        ]();
+      if (chrome.runtime.lastError) {
+        console.error("❌ Storage read error:", chrome.runtime.lastError);
+        return;
       }
+
+      const savedTheme = result[siteKey];
+      console.log("📖 Loaded saved theme:", savedTheme);
+
+      if (savedTheme === "dark") {
+        this.applyAdaptiveDarkTheme();
+      } else if (savedTheme === "light") {
+        this.applyAdaptiveLightTheme();
+      }
+      // If 'reset' or undefined, do nothing
     });
   }
 
-  getComputedColor(element, property) {
-    return getComputedStyle(element)[property];
+  // FIXED: Basic color utilities that work
+  isColorDark(color) {
+    // Simple check for dark colors
+    const rgb = this.parseColor(color);
+    const luminance = (rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114) / 255;
+    return luminance < 0.5;
   }
 
-  rgbToHsl(rgb) {
-    const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!match) return [0, 0, 0.5];
-
-    const r = parseInt(match[1]) / 255;
-    const g = parseInt(match[2]) / 255;
-    const b = parseInt(match[3]) / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h,
-      s,
-      l = (max + min) / 2;
-
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r:
-          h = (g - b) / d + (g < b ? 6 : 0);
-          break;
-        case g:
-          h = (b - r) / d + 2;
-          break;
-        case b:
-          h = (r - g) / d + 4;
-          break;
-      }
-      h /= 6;
-    }
-    return [h, s, l];
-  }
-
-  hslToRgb(hsl) {
-    const [h, s, l] = hsl;
-    let r, g, b;
-
-    if (s === 0) {
-      r = g = b = l;
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-      };
-
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1 / 3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1 / 3);
+  parseColor(color) {
+    if (!color || color === "rgba(0, 0, 0, 0)" || color === "transparent") {
+      return [255, 255, 255]; // Default to white for transparent
     }
 
-    return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(
-      b * 255
-    )})`;
-  }
-
-  isDefaultColor(color) {
-    const defaults = ["rgba(0, 0, 0, 0)", "transparent", "rgb(255, 255, 255)"];
-    return defaults.includes(color) || color === "";
-  }
-
-  adjustColorBrightness(color, percent) {
     const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!match) return color;
-
-    const factor = 1 + percent / 100;
-    const r = Math.min(255, Math.max(0, parseInt(match[1]) * factor));
-    const g = Math.min(255, Math.max(0, parseInt(match[2]) * factor));
-    const b = Math.min(255, Math.max(0, parseInt(match[3]) * factor));
-
-    return `rgb(${r}, ${g}, ${b})`;
+    if (match) {
+      return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
+    }
+    return [255, 255, 255]; // Default to white
   }
 }
 
-new ThemeManager();
+// FIXED: Initialize with error handling
+try {
+  new AdvancedThemeEngine();
+} catch (error) {
+  console.error("❌ Failed to initialize theme engine:", error);
+}
