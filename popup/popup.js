@@ -29,6 +29,31 @@ class PopupManager {
     const siteInfo = document.getElementById("siteInfo");
     if (siteInfo && this.currentSite) {
       siteInfo.textContent = this.currentSite;
+
+      // Add native theme detection info
+      this.detectAndShowNativeSupport();
+    }
+  }
+
+  // Optional: Detect and show if website has native theme support
+  async detectAndShowNativeSupport() {
+    try {
+      // Send message to content script to check native support
+      chrome.tabs.sendMessage(
+        this.currentTab.id,
+        { action: "checkNativeSupport" },
+        (response) => {
+          if (response && response.nativeSupport) {
+            const supportInfo = document.getElementById("supportInfo");
+            if (supportInfo) {
+              supportInfo.textContent = "🎨 Native theme support detected";
+              supportInfo.style.color = "#28a745";
+            }
+          }
+        }
+      );
+    } catch (error) {
+      // Ignore errors - native detection is optional
     }
   }
 
@@ -51,6 +76,8 @@ class PopupManager {
         await this.getCurrentTab();
       }
 
+      this.showStatus("Applying theme...", "info");
+
       // Send message to content script
       chrome.tabs.sendMessage(this.currentTab.id, { action }, (response) => {
         if (chrome.runtime.lastError) {
@@ -59,7 +86,18 @@ class PopupManager {
             "error"
           );
         } else {
-          this.showStatus(`Theme applied successfully!`, "success");
+          const themeName = action
+            .replace("apply", "")
+            .replace("Theme", "")
+            .toLowerCase();
+          if (themeName === "reset") {
+            this.showStatus("Restored original theme", "success");
+          } else {
+            this.showStatus(
+              `Applied ${themeName} theme successfully!`,
+              "success"
+            );
+          }
           this.updateButtonStates(action);
         }
       });
@@ -112,12 +150,14 @@ class PopupManager {
   // Show status message to user
   showStatus(message, type = "success") {
     const status = document.getElementById("status");
-    status.textContent = message;
-    status.className = `status show ${type}`;
+    if (status) {
+      status.textContent = message;
+      status.className = `status show ${type}`;
 
-    setTimeout(() => {
-      status.classList.remove("show");
-    }, 3000);
+      setTimeout(() => {
+        status.classList.remove("show");
+      }, 3000);
+    }
   }
 }
 
