@@ -2,19 +2,18 @@
   "manifest_version": 3,
   "name": "Theme Switcher",
   "version": "1.0",
-  "permissions": ["activeTab","storage"],
+  "description": "Apply intelligent themes that adapt to website colors",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Click to change themes"
+    "default_title": "Change website theme"
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://example.com/*",
-        "http://example.com/*",
-        "https://www.example.com/*"
-      ],
-      "js": ["content/content.js"]
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "run_at": "document_end"
     }
   ]
 }
