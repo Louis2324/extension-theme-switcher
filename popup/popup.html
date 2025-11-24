@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <style>
-      body {
-        width: 200px;
-        padding: 10px;
-      }
-
-      h1 {
-        color: blue;
-        font-size: 18px;
-      }
-      button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        outline: none;
-        margin: 5px 0;
-        background: #4caf50;
-        color: white;
-        border-radius: 5px;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #45a049;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theme Switcher</title>
+    <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <h3>Theme Switcher</h3>
-    <button id="darkBtn">Dark Mode</button>
-    <button id="lightBtn">Light Mode</button>
-    <button id="resetBtn">Reset</button>
+    <div class="container">
+      <header class="header">
+        <h1>Theme Switcher</h1>
+        <div class="site-info" id="siteInfo">Current Website</div>
+      </header>
+
+      <div class="theme-options">
+        <button id="darkBtn" class="theme-btn dark">
+          <span class="theme-icon">🌙</span>
+          Dark Mode
+        </button>
+
+        <button id="lightBtn" class="theme-btn light">
+          <span class="theme-icon">☀️</span>
+          Light Mode
+        </button>
+
+        <button id="resetBtn" class="theme-btn reset">
+          <span class="theme-icon">←</span>
+          Reset to Default
+        </button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
 
     <script src="./popup.js"></script>
   </body>
