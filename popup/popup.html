@@ -1,20 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <style>
-        body{
-            width: 200px;
-            padding: 10px;
-        }
+      body {
+        width: 200px;
+        padding: 10px;
+      }
 
-        h1 {
-            color: blue;
-            font-size: 18px;
-        }
+      h1 {
+        color: blue;
+        font-size: 18px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        outline: none;
+        margin: 5px 0;
+        background: #4caf50;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #45a049;
+      }
     </style>
-</head>
-<body>
-    <h1>My Theme Switcher!</h1>
-    <p>This is my first extension popup</p>
-</body>
+  </head>
+  <body>
+    <h3>Theme Switcher</h3>
+    <button id="darkBtn">Dark Mode</button>
+    <button id="lightBtn">Light Mode</button>
+    <button id="resetBtn">Reset</button>
+
+    <script src="./popup.js"></script>
+  </body>
 </html>
